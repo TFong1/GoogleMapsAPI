@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Draggable Marker</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" charset="utf-8" />
+    <style type="text/css">
+        #mapCanvas {
+            width: 500px;
+            height: 400px;
+            float: left;
+        }
+        #infoPanel {
+            float: left;
+            margin-left: 10px;
+        }
+            #infoPanel div {
+                margin-bottom: 5px;
+            }
+    </style>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script type="text/javascript">
+        var geocoder = new google.maps.Geocoder();
+
+        function updateMarkerStatus(message) {
+            document.getElementById("markerStatus").innerHTML = message;
+        }
+
+        function updateMarkerPosition(latlng) {
+            document.getElementById("info").innerHTML = [
+                latlng.lat(),
+                latlng.lng()
+            ].join(", ");
+        }
+
+        function updateMarkerAddress(address) {
+            document.getElementById("address").innerHTML = address;
+        }
+
+        function geocodePosition(position) {
+            geocoder.geocode({
+                latLng: position
+            }, function (responses) {
+                if (responses && responses.length > 0) {
+                    updateMarkerAddress(responses[0].formatted_address);
+                } else {
+                    updateMarkerAddress("Cannot determine address at this location.");
+                }
+            });
+        }
+
+        function initialize() {
+            var latlng = new google.maps.LatLng(-34.397, 150.644);
+            var map = new google.maps.Map(document.getElementById("mapCanvas"), {
+                zoom: 8,
+                center: latlng,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            });
+            var marker = new google.maps.Marker({
+                position: latlng,
+                title: "Point A",
+                map: map,
+                draggable: true
+            });
+
+            // Update current position info.
+            updateMarkerPosition(latlng);
+            geocodePosition(latlng);
+
+            // Add dragging event listeners.
+            google.maps.event.addListener(marker, "dragstart", function () {
+                updateMarkerStatus("Dragging...");
+            });
+
+            google.maps.event.addListener(marker, "drag", function () {
+                updateMarkerStatus("Dragging...");
+                updateMarkerPosition(marker.getPosition());
+            });
+
+            google.maps.event.addListener(marker, "dragend", function () {
+                updateMarkerStatus("Drag ended");
+                geocodePosition(marker.getPosition());
+            });
+        }
+
+        // Onload handler to fire off the app.
+        google.maps.event.addDomListener(window, "load", initialize);
+    </script>
+</head>
+<body>
+    <div id="mapCanvas"></div>
+    <div id="infoPanel">
+        <b>Marker status:</b>
+        <div id="markerStatus"><i>Click and drag the marker.</i></div>
+        <b>Current position:</b>
+        <div id="info"></div>
+        <b>Closest matching address:</b>
+        <div id="address"></div>
+    </div>
+</body>
+</html>
